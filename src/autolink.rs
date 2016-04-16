@@ -1,4 +1,4 @@
-mod h; use h::*;
+mod autolink_h; use autolink_h::*;
 
 
 
@@ -22,9 +22,9 @@ hoedown_autolink_is_safe(link: *const str, link_len: isize) -> bool
     for i in (0, valid_uris_count) {
         let len = valid_uris.len();
         
-        if (link_len > len &&
+        if link_len > len &&
             link.tolowercase()[..len] == valid_uris[i] &&
-            isalnum(link[len] as _)) {
+            isalnum(link[len] as _) {
                 return true
             }
     }
@@ -37,23 +37,23 @@ autolink_delim(data: *const u8, mut link_end: isize, max_rewind: isize, size: is
     let mut copen = 0;
 
 
-    for i in (0..link_end) {
-        if (data.offset(i) == b'<') {
+    for i in 0.. link_end {
+        if data.offset(i) == b'<' {
             link_end = i;
             break
         }
     }    
-    while (link_end > 0) {
+    while link_end > 0 {
         if b"?!.,:".iter().any(|&x| x == data.offset(link_end - 1)) {
             link_end -= 1
         }
-        else if (data.offset(link_end - 1) == b';') {
+        else if data.offset(link_end - 1) == b';' {
             let new_end = link_end - 1;
             
             while new_end > 0 && isalpha(*data.offset(new_end)) {
                 new_end -= 1
             }
-            if (new_end < link_end - 2 && data.offset(new_end) == '&') {
+            if new_end < link_end - 2 && data.offset(new_end) == '&' {
                 link_end = new_end
             } else {
                 link_end -= 1
@@ -61,7 +61,7 @@ autolink_delim(data: *const u8, mut link_end: isize, max_rewind: isize, size: is
         } else { break }
     }
     
-    if (link_end == 0) {
+    if link_end == 0 {
         return 0
     }
     let cclose = data.offset(link_end - 1);
@@ -99,10 +99,10 @@ autolink_delim(data: *const u8, mut link_end: isize, max_rewind: isize, size: is
          
          
          
-         while (i < link_end) {
-             if (data.offset(i) == copen) {
+         while i < link_end {
+             if data.offset(i) == copen {
                  opening += 1
-             } else if (data.offset(i) == cclose) {
+             } else if data.offset(i) == cclose {
                  closing += 1
              }
              i += 1
@@ -120,14 +120,14 @@ check_domain(data: *const u8, size: isize, allow_short: bool) -> isize
 {
     let mut x = 1; let mut np = 0;
     
-    if (!isalnum(*data as _)) {
+    if !isalnum(*data as _) {
         return 0
     }
-    for i in (1..size-1) {
+    for i in 1.. size-1 {
         x = i;
-        if (data.offset(i) == b'.' || data.offset(i) == b':') {
+        if data.offset(i) == b'.' || data.offset(i) == b':' {
             np += 1
-        } else if isalnum(data.offset(i) as _) && data.offset(i) != b'-' {
+        } else if isalnum(*data.offset(i) as _) && data.offset(i) != b'-' {
             break
         }        
     }
@@ -152,23 +152,23 @@ hoedown_autolink__www(
 ) -> isize {
 
     
-    if (max_rewind > 0 && !ispunct(data.offset(-1) as _) && !isspace(data.offset(-1) as _)) {
+    if max_rewind > 0 && !ispunct(*data.offset(-1) as _) && !isspace(*data.offset(-1) as _) {
         return 0
     }
-    if (size < 4 || data as *mut [u8; 4]!== b"www.") {
+    if size < 4 || data as *mut [u8; 4] != b"www." {
         return 0
     }
     let mut link_end = check_domain(data, size, 0);
     
-    if (link_end == 0) {
+    if link_end == 0 {
         return 0
     }
-    while (link_end < size && !isspace(data.offset(link_end))) {
+    while link_end < size && !isspace(data.offset(link_end)) {
         link_end += 1
     }
     let link_end = autolink_delim(data, link_end, max_rewind, size);
     
-    if (link_end == 0) {
+    if link_end == 0 {
         return 0
     }
     hoedown_buffer_put(link, data, link_end);
@@ -189,13 +189,13 @@ hoedown_autolink__email(
     let mut link_end = 0;
     
     
-    for rewind in (0..max_rewind) {
-        let c = data.offset(01 - rewind);
+    for rewind in 0..max_rewind {
+        let c = *data.offset(01 - rewind);
         
         if isalnum(c as _) {
             continue
         }
-        if (b".+-_".iter().any(|x| x == c)) {
+        if b".+-_".iter().any(|x| x == c) {
             continue
         }
         if rewind == 0 {
@@ -204,7 +204,7 @@ hoedown_autolink__email(
             break
         }
     }
-    for link_end_ in (0 ..size) {
+    for link_end_ in 0.. size {
         link_end = link_end_;
         let c = data.offset(link_end);
         if isalnum(c) {
@@ -247,7 +247,7 @@ hoedown_auto__url(
     if size < 4 || *data.offset(1) != b'/' || *data.offset(2) != b'/' {
         return 0
     }
-    while rewind < max_rewind && isalpha(data.offset(-1 - rewind) as _) {
+    while rewind < max_rewind && isalpha(*data.offset(-1 - rewind) as _) {
         rewind += 1
     }
     if!hoedown_autolink_is_safe(data - rewind, size + rewind) {
